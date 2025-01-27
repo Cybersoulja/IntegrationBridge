@@ -20,6 +20,12 @@ export function registerRoutes(app: Express): Server {
   app.use('/api/textastic', textasticRouter);
   app.use('/api/monitor', monitorRouter);
 
+  // Error handling middleware
+  app.use((err: any, req: any, res: any, next: any) => {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
