@@ -3,10 +3,23 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from "@db";
 import { sql } from "drizzle-orm";
+import cors from 'cors';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? 'your-production-domain' : '*',
+  credentials: true
+}));
+
+// Set default content type for API responses
+app.use('/api', (req, res, next) => {
+  res.type('application/json');
+  next();
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -47,12 +60,17 @@ app.use((req, res, next) => {
 
     const server = registerRoutes(app);
 
-    // Global error handler
+    // Global error handler with improved error messages
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       console.error('Server error:', err);
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
-      res.status(status).json({ message });
+      const errorResponse = {
+        message,
+        status,
+        timestamp: new Date().toISOString()
+      };
+      res.status(status).json(errorResponse);
     });
 
     if (app.get("env") === "development") {
@@ -61,7 +79,6 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    // ALWAYS serve the app on port 5000
     const PORT = 5000;
     server.listen(PORT, "0.0.0.0", () => {
       log(`Server running at http://0.0.0.0:${PORT}`);
