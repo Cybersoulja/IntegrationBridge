@@ -76,11 +76,11 @@ export function setupAuth(app: Express) {
           .limit(1);
 
         if (!user) {
-          return done(null, false, { message: "Incorrect username." });
+          return done(null, false, { message: "Username not found" });
         }
         const isMatch = await crypto.compare(password, user.password);
         if (!isMatch) {
-          return done(null, false, { message: "Incorrect password." });
+          return done(null, false, { message: "Incorrect password" });
         }
         return done(null, user);
       } catch (err) {
@@ -160,7 +160,10 @@ export function setupAuth(app: Express) {
     if (!result.success) {
       return res
         .status(400)
-        .send("Invalid input: " + result.error.issues.map(i => i.message).join(", "));
+        .json({ 
+          error: "Invalid input",
+          details: result.error.issues.map(i => i.message).join(", ")
+        });
     }
 
     const cb = (err: any, user: Express.User, info: IVerifyOptions) => {
@@ -169,7 +172,10 @@ export function setupAuth(app: Express) {
       }
 
       if (!user) {
-        return res.status(400).send(info.message ?? "Login failed");
+        return res.status(401).json({
+          error: "Authentication failed",
+          message: info.message || "Invalid username or password"
+        });
       }
 
       req.logIn(user, (err) => {
