@@ -9,10 +9,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// CORS configuration
+// CORS configuration with proper credentials support
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? 'your-production-domain' : '*',
-  credentials: true
+  origin: true, // Allow all origins in development
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
 }));
 
 // Set default content type for API responses
