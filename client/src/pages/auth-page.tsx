@@ -2,26 +2,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+import { useState } from "react";
+
+type FormData = {
+  username: string;
+  password: string;
+};
 
 export default function AuthPage() {
   const { login, register } = useUser();
   const { toast } = useToast();
-  
-  const loginForm = useForm({
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  const loginForm = useForm<FormData>({
     defaultValues: { username: "", password: "" }
   });
 
-  const registerForm = useForm({
+  const registerForm = useForm<FormData>({
     defaultValues: { username: "", password: "" }
   });
 
-  const onLogin = async (data: { username: string; password: string }) => {
+  const onLogin = async (data: FormData) => {
     try {
+      setLoginError(null);
       const result = await login(data);
       if (!result.ok) {
+        setLoginError(result.message);
         toast({
           variant: "destructive",
           title: "Login failed",
@@ -29,6 +41,7 @@ export default function AuthPage() {
         });
       }
     } catch (error: any) {
+      setLoginError(error.message);
       toast({
         variant: "destructive",
         title: "Error",
@@ -37,7 +50,7 @@ export default function AuthPage() {
     }
   };
 
-  const onRegister = async (data: { username: string; password: string }) => {
+  const onRegister = async (data: FormData) => {
     try {
       const result = await register(data);
       if (!result.ok) {
@@ -70,37 +83,77 @@ export default function AuthPage() {
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
-                <Input
-                  placeholder="Username"
-                  {...loginForm.register("username")}
-                />
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  {...loginForm.register("password")}
-                />
-                <Button type="submit" className="w-full">
-                  Login
-                </Button>
-              </form>
+              <Form {...loginForm}>
+                <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+                  {loginError && (
+                    <Alert variant="destructive">
+                      <ExclamationTriangleIcon className="h-4 w-4" />
+                      <AlertDescription>{loginError}</AlertDescription>
+                    </Alert>
+                  )}
+                  <FormField
+                    control={loginForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input placeholder="Username" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={loginForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input type="password" placeholder="Password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full">
+                    Login
+                  </Button>
+                </form>
+              </Form>
             </TabsContent>
 
             <TabsContent value="register">
-              <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
-                <Input
-                  placeholder="Username"
-                  {...registerForm.register("username")}
-                />
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  {...registerForm.register("password")}
-                />
-                <Button type="submit" className="w-full">
-                  Register
-                </Button>
-              </form>
+              <Form {...registerForm}>
+                <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
+                  <FormField
+                    control={registerForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input placeholder="Username" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={registerForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input type="password" placeholder="Password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full">
+                    Register
+                  </Button>
+                </form>
+              </Form>
             </TabsContent>
           </Tabs>
         </CardContent>
